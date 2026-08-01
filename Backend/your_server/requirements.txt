@@ -1,0 +1,11 @@
+fastapi
+uvicorn[standard]
+python-multipart
+python-dotenv
+speechbrain
+torch
+torchaudio
+soundfile
+librosa
+numpy
+build

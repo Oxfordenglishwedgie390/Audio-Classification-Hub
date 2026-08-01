@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sign In · Audio Classification Hub</title>
+  <meta name="description" content="Sign in or create an account to start your voice registration journey.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link
+    href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700;800&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
+    rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js"></script>
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+
+<body class="min-h-screen">
+  <div class="min-h-screen grid lg:grid-cols-2">
+    <!-- LEFT: shader panel -->
+    <div class="relative hidden lg:flex items-center justify-center overflow-hidden border-r border-white/[0.06]">
+      <canvas id="auth-canvas" class="absolute inset-0 w-full h-full" style="filter:blur(2px)"
+        aria-label="Voice waveform visualization"></canvas>
+      <div class="hero-bloom"></div>
+      <div class="relative z-10 px-12 max-w-md">
+        <a href="index.html" class="flex items-center gap-3 mb-8">
+          <div class="logo-bars"><span></span><span></span><span></span><span></span><span></span></div>
+          <span class="font-semibold">Audio Classification Hub</span>
+        </a>
+        <h2 class="display-hero text-5xl mb-4">Your Voice.<br>Your Identity.</h2>
+        <p class="text-secondary">Zero Compromise. Join thousands of developers securing access with voice biometrics.
+        </p>
+        <div class="flex gap-6 mt-10 text-sm text-secondary">
+          <span><i class="fa-solid fa-check text-cyan-400 mr-1.5"></i>99.3% accuracy</span>
+          <span><i class="fa-solid fa-check text-cyan-400 mr-1.5"></i>GDPR ready</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- RIGHT: auth card -->
+    <div class="flex items-center justify-center p-6 relative">
+      <a href="index.html" class="absolute top-6 left-6 text-secondary text-sm nav-link lg:hidden"><i
+          class="fa-solid fa-arrow-left mr-1"></i> Home</a>
+
+      <div class="glass w-full max-w-md p-8 md:p-10" style="border-radius:1.5rem" id="auth-card">
+        <div class="flex items-center gap-3 mb-8 lg:hidden">
+          <div class="logo-bars"><span></span><span></span><span></span><span></span><span></span></div>
+          <span class="font-semibold text-sm">Audio Classification Hub</span>
+        </div>
+
+        <!-- pill tabs -->
+        <div class="flex p-1 rounded-full bg-white/[0.04] border border-white/[0.06] mb-8">
+          <button id="tab-login"
+            class="flex-1 py-2.5 rounded-full text-sm font-semibold transition bg-indigo-500 text-white">Login</button>
+          <button id="tab-signup"
+            class="flex-1 py-2.5 rounded-full text-sm font-semibold transition text-secondary">Sign Up</button>
+        </div>
+
+        <!-- LOGIN FORM -->
+        <form id="login-form" class="space-y-4" onsubmit="handleLogin(event)">
+          <div>
+            <label class="text-sm text-secondary mb-1.5 block" for="login-email">Email</label>
+            <input id="login-email" type="email" class="field" placeholder="you@company.com" required>
+          </div>
+          <div>
+            <label class="text-sm text-secondary mb-1.5 block" for="login-pw">Password</label>
+            <div class="relative">
+              <input type="password" id="login-pw" class="field pr-11" placeholder="••••••••" required>
+              <button type="button" class="absolute right-3 top-1/2 -translate-y-1/2 text-secondary"
+                onclick="togglePw('login-pw', this)"><i class="fa-solid fa-eye"></i></button>
+            </div>
+          </div>
+          <div id="login-error"></div>
+          <button id="login-btn" type="submit" class="btn-primary w-full justify-center">
+            Login <i class="fa-solid fa-arrow-right text-sm"></i>
+          </button>
+        </form>
+
+        <!-- SIGNUP FORM -->
+        <form id="signup-form" class="space-y-4 hidden" onsubmit="handleSignup(event)">
+          <div>
+            <label class="text-sm text-secondary mb-1.5 block" for="signup-name">Full name</label>
+            <input id="signup-name" type="text" class="field" placeholder="Jane Doe" required>
+          </div>
+          <div>
+            <label class="text-sm text-secondary mb-1.5 block" for="signup-email">Email</label>
+            <input id="signup-email" type="email" class="field" placeholder="you@company.com" required>
+          </div>
+          <div>
+            <label class="text-sm text-secondary mb-1.5 block" for="signup-pw">Password</label>
+            <div class="relative">
+              <input type="password" id="signup-pw" class="field pr-11" placeholder="Create a strong password" required
+                oninput="strength(this.value)">
+              <button type="button" class="absolute right-3 top-1/2 -translate-y-1/2 text-secondary"
+                onclick="togglePw('signup-pw', this)"><i class="fa-solid fa-eye"></i></button>
+            </div>
+            <div class="flex gap-1.5 mt-2">
+              <span class="str-seg h-1 flex-1 rounded bg-white/10"></span>
+              <span class="str-seg h-1 flex-1 rounded bg-white/10"></span>
+              <span class="str-seg h-1 flex-1 rounded bg-white/10"></span>
+              <span class="str-seg h-1 flex-1 rounded bg-white/10"></span>
+            </div>
+            <p id="str-label" class="text-xs text-muted mt-1.5">Use 8+ characters with a mix of letters, numbers &
+              symbols.</p>
+          </div>
+          <div id="signup-error"></div>
+          <button id="signup-btn" type="submit" class="btn-primary w-full justify-center">
+            Create Account <i class="fa-solid fa-arrow-right text-sm"></i>
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <script src="js/api.js"></script>
+  <script src="js/main.js"></script>
+  <script src="js/hero-shader.js"></script>
+  <script>
+    // If already logged in, redirect immediately
+    if (Session.get()) window.location.href = 'onboarding-type.html';
+
+    initHeroShader('auth-canvas');
+
+    const tabLogin = document.getElementById('tab-login');
+    const tabSignup = document.getElementById('tab-signup');
+    const loginForm = document.getElementById('login-form');
+    const signupForm = document.getElementById('signup-form');
+
+    function setTab(loginActive) {
+      tabLogin.classList.toggle('bg-indigo-500', loginActive);
+      tabLogin.classList.toggle('text-white', loginActive);
+      tabLogin.classList.toggle('text-secondary', !loginActive);
+      tabSignup.classList.toggle('bg-indigo-500', !loginActive);
+      tabSignup.classList.toggle('text-white', !loginActive);
+      tabSignup.classList.toggle('text-secondary', loginActive);
+      loginForm.classList.toggle('hidden', !loginActive);
+      signupForm.classList.toggle('hidden', loginActive);
+    }
+    tabLogin.onclick = () => setTab(true);
+    tabSignup.onclick = () => setTab(false);
+
+    function togglePw(id, btn) {
+      const inp = document.getElementById(id);
+      const show = inp.type === 'password';
+      inp.type = show ? 'text' : 'password';
+      btn.innerHTML = show ? '<i class="fa-solid fa-eye-slash"></i>' : '<i class="fa-solid fa-eye"></i>';
+    }
+
+    function strength(val) {
+      let score = 0;
+      if (val.length >= 8) score++;
+      if (/[A-Z]/.test(val) && /[a-z]/.test(val)) score++;
+      if (/[0-9]/.test(val)) score++;
+      if (/[^A-Za-z0-9]/.test(val)) score++;
+      const segs = document.querySelectorAll('.str-seg');
+      const colors = ['bg-white/10', 'bg-red-500', 'bg-amber-500', 'bg-amber-400', 'bg-green-500'];
+      const labels = ['Too weak', 'Weak', 'Fair', 'Good', 'Strong'];
+      segs.forEach((s, i) => {
+        s.className = 'str-seg h-1 flex-1 rounded ' + (i < score ? colors[score] : 'bg-white/10');
+      });
+      document.getElementById('str-label').textContent = labels[score];
+    }
+
+    // ── LOGIN ──────────────────────────────────────────────────────────────────
+    async function handleLogin(e) {
+      e.preventDefault();
+      const errDiv = document.getElementById('login-error');
+      const btn = document.getElementById('login-btn');
+      const email = document.getElementById('login-email').value.trim();
+      const pw = document.getElementById('login-pw').value;
+      errDiv.innerHTML = '';
+
+      setLoading(btn, true);
+      try {
+        const user = await apiLogin(email, pw);
+        Session.save({ name: user.name, email: user.email, username: user.username, whl_ready: user.whl_ready });
+        // If user already has a .whl, go straight to download
+        window.location.href = user.whl_ready ? 'download.html' : 'onboarding-type.html';
+      } catch (err) {
+        const el = showError('login-error', err.message);
+        if (!document.getElementById('login-error').firstChild) errDiv.appendChild(el);
+        errDiv.textContent = err.message;
+        errDiv.style.cssText = `
+          margin-top:.75rem; padding:.75rem 1rem; border-radius:.6rem;
+          background:rgba(239,68,68,0.12); border:1px solid rgba(239,68,68,0.35);
+          color:#FCA5A5; font-size:.875rem; text-align:center;`;
+        setLoading(btn, false);
+      }
+    }
+
+    // ── REGISTER ───────────────────────────────────────────────────────────────
+    async function handleSignup(e) {
+      e.preventDefault();
+      const errDiv = document.getElementById('signup-error');
+      const btn = document.getElementById('signup-btn');
+      const name = document.getElementById('signup-name').value.trim();
+      const email = document.getElementById('signup-email').value.trim();
+      const pw = document.getElementById('signup-pw').value;
+      errDiv.innerHTML = '';
+
+      setLoading(btn, true);
+      try {
+        const data = await apiRegister(name, email, pw);
+        Session.save({ name, email, username: data.username, whl_ready: false });
+        window.location.href = 'onboarding-type.html';
+      } catch (err) {
+        errDiv.textContent = err.message;
+        errDiv.style.cssText = `
+          margin-top:.75rem; padding:.75rem 1rem; border-radius:.6rem;
+          background:rgba(239,68,68,0.12); border:1px solid rgba(239,68,68,0.35);
+          color:#FCA5A5; font-size:.875rem; text-align:center;`;
+        setLoading(btn, false);
+      }
+    }
+  </script>
+</body>
+
+</html>

@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Processing Your Voice · Audio Classification Hub</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link
+    href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700;800&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
+    rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/echarts@5/dist/echarts.min.js"></script>
+  <link rel="stylesheet" href="css/style.css" />
+  <style>
+    .proc-step {
+      display: flex;
+      align-items: center;
+      gap: .75rem;
+      padding: .7rem .5rem;
+      border-radius: .6rem;
+      transition: all .4s ease;
+      color: var(--text-muted);
+    }
+
+    .proc-step.active {
+      color: #fff;
+      background: rgba(0, 212, 255, 0.06);
+      transform: translateX(4px);
+    }
+
+    .proc-step.done {
+      color: #22C55E;
+    }
+
+    .proc-dot {
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+      border: 1px solid currentColor;
+      flex-shrink: 0;
+    }
+
+    .proc-step.done .proc-dot {
+      background: rgba(34, 197, 94, 0.15);
+      border-color: rgba(34, 197, 94, 0.5);
+    }
+
+    .viz-panel {
+      background: var(--bg-surface);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 1rem;
+      padding: 1rem;
+      overflow: hidden;
+    }
+
+    .viz-label {
+      font-size: .75rem;
+      color: var(--text-secondary);
+      font-weight: 500;
+      margin-bottom: .5rem;
+    }
+
+    /* Status banner */
+    #status-banner {
+      margin: .75rem 0;
+      padding: .65rem 1rem;
+      border-radius: .6rem;
+      font-size: .85rem;
+      text-align: center;
+      display: none;
+    }
+
+    #status-banner.info {
+      background: rgba(99, 102, 241, 0.12);
+      border: 1px solid rgba(99, 102, 241, 0.4);
+      color: #A5B4FC;
+      display: block;
+    }
+
+    #status-banner.error {
+      background: rgba(239, 68, 68, 0.12);
+      border: 1px solid rgba(239, 68, 68, 0.35);
+      color: #FCA5A5;
+      display: block;
+    }
+
+    #status-banner.ok {
+      background: rgba(34, 197, 94, 0.12);
+      border: 1px solid rgba(34, 197, 94, 0.35);
+      color: #86EFAC;
+      display: block;
+    }
+  </style>
+</head>
+
+<body>
+  <div id="nav-mount"></div>
+
+  <main class="max-w-7xl mx-auto px-6 pt-28 pb-24">
+    <div class="stepper mb-10">
+      <div class="step done"><span class="step-dot"><i class="fa-solid fa-check text-xs"></i></span><span
+          class="step-label">Type</span></div>
+      <span class="step-line"></span>
+      <div class="step done"><span class="step-dot"><i class="fa-solid fa-check text-xs"></i></span><span
+          class="step-label">Record</span></div>
+      <span class="step-line"></span>
+      <div class="step active"><span class="step-dot">3</span><span class="step-label">Process</span></div>
+      <span class="step-line"></span>
+      <div class="step"><span class="step-dot">4</span><span class="step-label">Download</span></div>
+    </div>
+
+    <div class="text-center mb-10">
+      <h1 class="section-title mb-2">Generating your voiceprint</h1>
+      <p class="text-secondary">Watch the ECapa pipeline turn your audio into a 192-dimensional embedding.</p>
+    </div>
+
+    <div class="grid lg:grid-cols-10 gap-6">
+      <!-- LEFT: progress -->
+      <aside class="lg:col-span-3">
+        <div class="glass p-6 sticky top-24">
+          <h3 class="text-sm font-semibold uppercase tracking-wider text-secondary mb-5">Pipeline</h3>
+          <div class="space-y-1">
+            <div class="proc-step active" data-i="0"><span class="proc-dot"><span
+                  class="w-2 h-2 rounded-full bg-cyan-400 animate-pulse"></span></span> Loading Audio</div>
+            <div class="proc-step" data-i="1"><span class="proc-dot"></span> Preprocessing</div>
+            <div class="proc-step" data-i="2"><span class="proc-dot"></span> MFCC Extraction</div>
+            <div class="proc-step" data-i="3"><span class="proc-dot"></span> ECapa Embedding</div>
+            <div class="proc-step" data-i="4"><span class="proc-dot"></span> Packaging .whl</div>
+          </div>
+
+          <div class="mt-6 pt-6 border-t border-white/[0.06]">
+            <div class="flex justify-between text-sm mb-1">
+              <span class="text-secondary">Elapsed</span>
+              <span class="font-mono" id="elapsed">0.0s</span>
+            </div>
+            <div class="flex justify-between text-sm mb-2">
+              <span class="text-secondary">Progress</span>
+              <span class="font-mono text-cyan-400" id="progress-pct">0%</span>
+            </div>
+            <div class="h-2 rounded-full bg-white/[0.06] overflow-hidden">
+              <div id="progress-bar" class="h-full rounded-full transition-all duration-500"
+                style="width:0%;background:linear-gradient(90deg,#6366F1,#00D4FF)"></div>
+            </div>
+          </div>
+
+          <div id="status-banner"></div>
+
+          <!-- Shown when pipeline finishes — user navigates manually -->
+          <div id="complete-cta" class="hidden mt-6 bounce-in space-y-3">
+            <p class="text-xs text-center" style="color:var(--text-secondary)">Your voiceprint is ready — take your time
+              below, then continue when you like.</p>
+            <a href="download.html" id="btn-go-download" class="btn-primary w-full justify-center"
+              style="font-size:.95rem;padding:.75rem 1.25rem">
+              <i class="fa-solid fa-download mr-2"></i>Download .whl Package
+            </a>
+            <a href="download.html#verify" id="btn-go-verify"
+              class="w-full flex items-center justify-center gap-2 rounded-xl border border-white/20 py-3 text-sm font-medium transition hover:bg-white/5"
+              style="color:#A5B4FC">
+              <i class="fa-solid fa-microphone"></i>Verify Your Voice Instead
+            </a>
+          </div>
+        </div>
+      </aside>
+
+      <!-- RIGHT: visualizations -->
+      <section class="lg:col-span-7 space-y-6">
+        <div class="grid md:grid-cols-2 gap-6">
+          <div class="viz-panel">
+            <p class="viz-label">Mel-Frequency Cepstral Coefficients</p>
+            <canvas id="mfcc-canvas" class="w-full" style="height:160px" aria-label="MFCC heatmap"></canvas>
+          </div>
+          <div class="viz-panel">
+            <p class="viz-label">Waveform + Energy Envelope</p>
+            <div id="waveform-chart" style="height:160px"></div>
+          </div>
+          <div class="viz-panel">
+            <p class="viz-label">Pitch Contour (F0)</p>
+            <div id="pitch-chart" style="height:160px"></div>
+          </div>
+          <div class="viz-panel">
+            <p class="viz-label">ECapa 192-dim Voice Embedding</p>
+            <div id="embed-bars" class="flex items-center gap-[1px]" style="height:160px"></div>
+          </div>
+        </div>
+
+        <div class="viz-panel">
+          <p class="viz-label">Your voice in embedding space (UMAP projection)</p>
+          <div id="umap-chart" style="height:300px"></div>
+          <div class="flex flex-wrap gap-5 text-xs text-secondary mt-2 px-1">
+            <span><span class="inline-block w-2.5 h-2.5 rounded-full mr-1"
+                style="background:rgba(148,163,184,0.5)"></span>Population</span>
+            <span><span class="inline-block w-2.5 h-2.5 rounded-full mr-1" style="background:#A855F7"></span>Similar
+              speakers</span>
+            <span><span class="inline-block w-2.5 h-2.5 rounded-full mr-1" style="background:#00D4FF"></span>Your
+              voiceprint</span>
+          </div>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <script src="js/api.js"></script>
+  <script src="js/main.js"></script>
+  <script src="js/processing.js"></script>
+  <script>
+    // Guard
+    const __user = Session.requireAuth('auth.html');
+    if (!__user) throw new Error('Not logged in');
+
+    document.getElementById('nav-mount').innerHTML = renderNavbar();
+
+    // ── Start animated visuals immediately ────────────────────────────────────
+    window.addEventListener('load', () => {
+      setTimeout(startProcessing, 400);   // cosmetic pipeline animation
+      startStatusPolling();               // real backend polling
+    });
+
+    // ── Poll backend every 3 seconds until whl_ready ─────────────────────────
+    let _pollTimer = null;
+    let _pollCount = 0;
+    const MAX_POLLS = 120;  // give up after ~6 minutes
+
+    function setBanner(type, msg) {
+      const b = document.getElementById('status-banner');
+      b.className = type;
+      b.textContent = msg;
+    }
+
+    async function startStatusPolling() {
+      setBanner('info', '⏳ Pipeline running — this may take 1–3 minutes…');
+
+      _pollTimer = setInterval(async () => {
+        _pollCount++;
+        if (_pollCount > MAX_POLLS) {
+          clearInterval(_pollTimer);
+          setBanner('error', '⚠ Timed out waiting for server. Please check and try again.');
+          return;
+        }
+
+        try {
+          const data = await apiStatus(__user.email);
+          if (data.whl_ready) {
+            clearInterval(_pollTimer);
+            // Update session with fresh status
+            Session.save({ ...__user, whl_ready: true });
+            const msg = sessionStorage.getItem('process_message');
+            setBanner('ok', '✅ ' + (msg || 'Voiceprint ready! Proceed when you\'re ready.'));
+            sessionStorage.removeItem('process_message');
+            // Advance the cosmetic progress bar to 100%
+            forceComplete();
+            // NO auto-redirect — user decides when to move on
+          }
+        } catch (err) {
+          // Server might be briefly busy during processing — ignore transient errors
+          console.warn('Status poll error:', err.message);
+        }
+      }, 3000);
+    }
+
+    // Force cosmetic UI to complete state when real pipeline finishes
+    function forceComplete() {
+      const bar = document.getElementById('progress-bar');
+      const pct = document.getElementById('progress-pct');
+      if (bar) bar.style.width = '100%';
+      if (pct) pct.textContent = '100%';
+      document.querySelectorAll('.proc-step').forEach(s => {
+        s.classList.remove('active');
+        s.classList.add('done');
+        const dot = s.querySelector('.proc-dot');
+        if (dot) dot.innerHTML = '<i class="fa-solid fa-check text-xs"></i>';
+      });
+      const cta = document.getElementById('complete-cta');
+      if (cta) cta.classList.remove('hidden');
+    }
+  </script>
+</body>
+
+</html>

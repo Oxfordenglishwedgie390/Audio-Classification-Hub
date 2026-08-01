@@ -1,0 +1,27 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+
+# Virtual environment
+venv/
+env/
+.env
+
+# ── IMPORTANT: These directories are GENERATED at runtime ──
+# WatchFiles must NOT watch them or it will reload the server mid-request.
+workspaces/
+pretrained_models/
+
+# Generated artifacts
+*.npy
+*.whl
+*.egg-info/
+dist/
+build/
+
+# Logs / temp
+*.log
+*.tmp

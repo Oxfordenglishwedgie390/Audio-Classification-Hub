@@ -1,0 +1,1047 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Download & Docs · Audio Classification Hub</title>
+  <meta name="description" content="Download your voiceauth package and integrate voice authentication in minutes.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link
+    href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700;800&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
+    rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js"></script>
+  <link rel="stylesheet" href="css/style.css" />
+  <style>
+    .doc-link {
+      display: block;
+      padding: .35rem .75rem;
+      border-radius: .5rem;
+      font-size: .875rem;
+      color: var(--text-secondary);
+      text-decoration: none;
+      transition: all .15s;
+    }
+
+    .doc-link:hover {
+      color: #fff;
+    }
+
+    .doc-link.active {
+      color: #00D4FF;
+      background: rgba(0, 212, 255, 0.1);
+    }
+
+    .doc-cat {
+      font-size: .7rem;
+      text-transform: uppercase;
+      letter-spacing: .08em;
+      color: var(--text-muted);
+      font-weight: 600;
+      margin: 1.25rem 0 .5rem;
+      padding-left: .75rem;
+    }
+
+    .doc-h2 {
+      font-family: 'Space Grotesk', sans-serif;
+      font-weight: 700;
+      font-size: 1.6rem;
+      margin: 2.5rem 0 1rem;
+      scroll-margin-top: 90px;
+    }
+
+    .doc-body p {
+      color: var(--text-secondary);
+      margin-bottom: 1rem;
+    }
+
+    .codeblk {
+      background: #161B22;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: .6rem;
+      position: relative;
+      margin: .75rem 0 1.5rem;
+    }
+
+    .codeblk pre {
+      margin: 0;
+      padding: 1rem 1.25rem;
+      overflow-x: auto;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: .85rem;
+      line-height: 1.6;
+    }
+
+    .copy-btn {
+      position: absolute;
+      top: .6rem;
+      right: .6rem;
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      color: var(--text-secondary);
+      width: 30px;
+      height: 30px;
+      border-radius: .4rem;
+      cursor: pointer;
+      transition: all .15s;
+    }
+
+    .copy-btn:hover {
+      color: #fff;
+      background: rgba(255, 255, 255, 0.12);
+    }
+
+    .callout-info {
+      background: rgba(30, 27, 75, 0.5);
+      border-left: 4px solid #818CF8;
+      padding: 1rem 1.25rem;
+      border-radius: .4rem;
+      margin: 1.25rem 0;
+    }
+
+    .callout-warn {
+      background: rgba(69, 26, 3, 0.4);
+      border-left: 4px solid #F59E0B;
+      padding: 1rem 1.25rem;
+      border-radius: .4rem;
+      margin: 1.25rem 0;
+    }
+
+    .doc-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1rem 0 1.5rem;
+      font-size: .85rem;
+    }
+
+    .doc-table th,
+    .doc-table td {
+      padding: .6rem .9rem;
+      text-align: left;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+    }
+
+    .doc-table th {
+      color: var(--text-secondary);
+      font-weight: 600;
+    }
+
+    .doc-table tr:nth-child(even) td {
+      background: rgba(255, 255, 255, 0.02);
+    }
+
+    .doc-table td:first-child {
+      font-family: 'JetBrains Mono', monospace;
+      color: #818CF8;
+    }
+
+    .sig {
+      font-family: 'JetBrains Mono', monospace;
+      color: #818CF8;
+      background: rgba(99, 102, 241, 0.08);
+      padding: .2rem .5rem;
+      border-radius: .3rem;
+    }
+
+    .toc-link {
+      display: block;
+      font-size: .8rem;
+      color: var(--text-muted);
+      padding: .25rem 0;
+      border-left: 2px solid transparent;
+      padding-left: .75rem;
+      text-decoration: none;
+    }
+
+    .toc-link:hover {
+      color: #fff;
+      border-color: rgba(255, 255, 255, 0.2);
+    }
+
+    /* Download hero states */
+    #dl-hero-loading {
+      display: none;
+    }
+
+    #dl-hero-ready {
+      display: none;
+    }
+
+    #dl-hero-notready {
+      display: none;
+    }
+
+    #dl-hero-nologin {
+      display: none;
+    }
+  </style>
+</head>
+
+<body>
+  <div id="nav-mount"></div>
+
+  <!-- ═══ ZONE A: HERO DOWNLOAD BANNER ═══ -->
+  <header class="relative min-h-[70vh] flex items-center justify-center overflow-hidden">
+    <canvas id="dl-canvas" class="absolute inset-0 w-full h-full" style="z-index:0"
+      aria-label="Voice waveform visualization"></canvas>
+    <div class="hero-bloom"></div>
+    <div class="relative z-10 text-center px-6 max-w-3xl mx-auto pt-24 pb-12">
+
+      <!-- Loading state -->
+      <div id="dl-hero-loading">
+        <div class="reveal inline-flex items-center gap-2 text-[13px] font-medium tracking-wider uppercase mb-6"
+          style="color:#818CF8">
+          <i class="fa-solid fa-spinner fa-spin"></i> Checking status…
+        </div>
+        <h1 class="display-hero text-6xl md:text-7xl mb-6">Your Voice<br>Package</h1>
+      </div>
+
+      <!-- Ready state (has .whl) -->
+      <div id="dl-hero-ready">
+        <div class="reveal inline-flex items-center gap-2 text-[13px] font-medium tracking-wider uppercase mb-6"
+          style="color:#22C55E">
+          <i class="fa-solid fa-circle-check"></i> Embedding Complete
+        </div>
+        <h1 class="display-hero text-6xl md:text-7xl mb-6 reveal" data-delay="60">Your Voice<br>Is Ready.</h1>
+        <p class="reveal text-secondary text-lg mb-8" data-delay="120">Download your authentication package and
+          integrate in minutes.</p>
+
+        <a id="real-download-btn" href="#" class="reveal btn-primary inline-flex text-base" data-delay="180"
+          style="height:64px;min-width:220px;justify-content:center" onclick="triggerDownload(event)">
+          <i class="fa-solid fa-download"></i>
+          <span class="text-left leading-tight" id="dl-btn-label">
+            Download voiceauth.whl<br><span class="text-xs font-normal opacity-80">Python 3.9+ · Click to
+              download</span>
+          </span>
+        </a>
+
+        <div
+          class="reveal flex flex-wrap items-center justify-center gap-x-5 gap-y-1 mt-6 text-xs text-secondary font-mono"
+          data-delay="240">
+          <span id="dl-filename-label">–</span>
+          <span>Status: Ready</span>
+        </div>
+      </div>
+
+      <!-- Not ready state -->
+      <div id="dl-hero-notready">
+        <div class="reveal inline-flex items-center gap-2 text-[13px] font-medium tracking-wider uppercase mb-6"
+          style="color:#F59E0B">
+          <i class="fa-solid fa-clock"></i> Processing…
+        </div>
+        <h1 class="display-hero text-6xl md:text-7xl mb-6">Still<br>Building…</h1>
+        <p class="reveal text-secondary text-lg mb-8">Your .whl package is still being built. This takes 1–3 minutes.
+        </p>
+        <a href="onboarding-processing.html" class="btn-primary inline-flex gap-2">
+          <i class="fa-solid fa-spinner fa-spin"></i> Check Progress
+        </a>
+      </div>
+
+      <!-- Not logged in -->
+      <div id="dl-hero-nologin">
+        <div class="reveal inline-flex items-center gap-2 text-[13px] font-medium tracking-wider uppercase mb-6"
+          style="color:#818CF8">
+          <i class="fa-solid fa-lock"></i> Authentication Required
+        </div>
+        <h1 class="display-hero text-6xl md:text-7xl mb-6">Sign In<br>to Download</h1>
+        <p class="reveal text-secondary text-lg mb-8">Create an account and register your voice to get your personal
+          .whl package.</p>
+        <a href="auth.html" class="btn-primary inline-flex gap-2">Get Started <i
+            class="fa-solid fa-arrow-right text-sm"></i></a>
+      </div>
+
+    </div>
+  </header>
+
+  <!-- ═══ ZONE A-2: VOICE VERIFIER ═══ -->
+  <section id="verifier" class="border-t border-white/[0.06]"
+    style="background:linear-gradient(180deg,#080B14 0%,#0D1117 100%)">
+    <div class="max-w-4xl mx-auto px-6 py-20">
+      <div class="text-center mb-12">
+        <p class="text-sm uppercase tracking-widest text-indigo-400 mb-2 font-semibold"><i
+            class="fa-solid fa-waveform-lines mr-2"></i>Live Verifier</p>
+        <h2 class="section-title mb-3">Test Your Voiceprint</h2>
+        <p class="text-secondary max-w-lg mx-auto">Speak for 3–10 seconds and see exactly how well your voice matches
+          your registered embedding — down to a percentage.</p>
+      </div>
+
+      <!-- gate: only show when logged in & whl_ready -->
+      <div id="verifier-gate-locked" class="text-center hidden">
+        <div class="glass inline-block px-8 py-8 rounded-2xl">
+          <i class="fa-solid fa-lock text-4xl text-indigo-400 mb-4 block"></i>
+          <p class="font-semibold mb-1">Register your voice first</p>
+          <p class="text-secondary text-sm mb-4">Complete the onboarding to unlock voice verification.</p>
+          <a href="auth.html" class="btn-primary">Get Started <i class="fa-solid fa-arrow-right text-sm"></i></a>
+        </div>
+      </div>
+
+      <div id="verifier-panel" class="hidden">
+        <div class="grid md:grid-cols-2 gap-8 items-start">
+
+          <!-- LEFT: Input -->
+          <div class="glass p-6 rounded-2xl space-y-5">
+            <h3 class="font-semibold text-sm uppercase tracking-wider text-secondary">1 — Provide a Voice Sample</h3>
+
+            <!-- Tabs -->
+            <div class="flex gap-1 p-1 rounded-full bg-white/[0.04] border border-white/[0.06]">
+              <button id="vtab-rec"
+                class="flex-1 py-2 rounded-full text-xs font-semibold transition bg-indigo-500 text-white"
+                onclick="vswitchTab('rec')">
+                <i class="fa-solid fa-microphone mr-1"></i>Record
+              </button>
+              <button id="vtab-up" class="flex-1 py-2 rounded-full text-xs font-semibold transition text-secondary"
+                onclick="vswitchTab('up')">
+                <i class="fa-solid fa-upload mr-1"></i>Upload
+              </button>
+            </div>
+
+            <!-- Record panel -->
+            <div id="vpanel-rec">
+              <div class="flex flex-col items-center gap-4">
+                <!-- mic button -->
+                <div id="vmic"
+                  class="relative w-28 h-28 rounded-full border-2 border-indigo-500/40 grid place-items-center cursor-pointer select-none transition-all hover:border-indigo-400"
+                  style="background:rgba(99,102,241,0.06)" onclick="vtoggleRecord()">
+                  <i id="vmic-icon" class="fa-solid fa-microphone text-4xl text-indigo-300"></i>
+                  <span id="vmic-dot"
+                    class="hidden absolute top-3 right-3 w-3 h-3 rounded-full bg-red-500 animate-pulse"></span>
+                </div>
+                <p id="vmic-label" class="text-sm text-secondary">Tap to record</p>
+                <p id="vmic-timer" class="font-mono text-xs text-muted hidden">00:00</p>
+
+                <!-- playback -->
+                <div id="vplayback" class="hidden w-full glass rounded-xl p-3 flex items-center gap-3">
+                  <button class="w-9 h-9 rounded-full bg-indigo-500 grid place-items-center text-white flex-shrink-0"
+                    onclick="vplayback()">
+                    <i id="vplay-icon" class="fa-solid fa-play text-xs"></i>
+                  </button>
+                  <div id="vwave" class="flex items-end gap-[2px] flex-1 h-8 overflow-hidden"></div>
+                  <button class="text-xs text-secondary nav-link" onclick="vclearRec()"><i
+                      class="fa-solid fa-trash"></i></button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Upload panel -->
+            <div id="vpanel-up" class="hidden">
+              <label for="vfile-input"
+                class="block glass border-2 border-dashed border-white/15 rounded-xl p-8 text-center cursor-pointer hover:border-indigo-400 transition">
+                <i class="fa-solid fa-cloud-arrow-up text-3xl text-indigo-300 mb-2 block"></i>
+                <p class="text-sm font-semibold">Drop audio or click</p>
+                <p class="text-xs text-muted mt-1">.wav .mp3 .flac .ogg .m4a · Max 10MB</p>
+                <input id="vfile-input" type="file" accept=".wav,.mp3,.flac,.ogg,.webm,.m4a" class="hidden"
+                  onchange="vhandleFile(this)">
+              </label>
+              <div id="vfile-name" class="hidden flex items-center gap-2 mt-3 text-sm glass p-3 rounded-xl">
+                <i class="fa-solid fa-file-audio text-cyan-400 flex-shrink-0"></i>
+                <span id="vfile-label" class="truncate flex-1 text-secondary">–</span>
+                <button onclick="vclearFile()" class="text-muted nav-link flex-shrink-0"><i
+                    class="fa-solid fa-xmark"></i></button>
+              </div>
+            </div>
+
+            <!-- Error -->
+            <div id="verr" class="hidden text-xs px-3 py-2 rounded-lg"
+              style="background:rgba(239,68,68,0.1);color:#FCA5A5;border:1px solid rgba(239,68,68,0.2)"></div>
+
+            <!-- Submit -->
+            <button id="vsubmit-btn" class="btn-primary w-full justify-center" onclick="runVerify()" disabled
+              style="opacity:.45;cursor:not-allowed">
+              <i class="fa-solid fa-bolt"></i> Verify Voice
+            </button>
+          </div>
+
+          <!-- RIGHT: Result gauge -->
+          <div class="glass p-6 rounded-2xl flex flex-col items-center gap-6">
+            <h3 class="font-semibold text-sm uppercase tracking-wider text-secondary self-start">2 — Match Result</h3>
+
+            <!-- SVG circular gauge -->
+            <div class="relative" style="width:200px;height:200px">
+              <svg width="200" height="200" viewBox="0 0 200 200" class="-rotate-90">
+                <!-- track -->
+                <circle cx="100" cy="100" r="80" fill="none" stroke="rgba(255,255,255,0.06)" stroke-width="14" />
+                <!-- fill -->
+                <circle id="vgauge-fill" cx="100" cy="100" r="80" fill="none" stroke="rgba(99,102,241,0.3)"
+                  stroke-width="14" stroke-linecap="round" stroke-dasharray="502" stroke-dashoffset="502"
+                  style="transition:stroke-dashoffset 1s cubic-bezier(.16,1,.3,1),stroke .5s" />
+              </svg>
+              <div class="absolute inset-0 flex flex-col items-center justify-center gap-1">
+                <i id="vresult-icon" class="fa-solid fa-microphone-slash text-3xl text-muted"></i>
+                <span id="vresult-pct" class="font-display font-bold text-3xl">–%</span>
+                <span id="vresult-label" class="text-xs text-muted font-semibold tracking-wide uppercase">Waiting</span>
+              </div>
+            </div>
+
+            <!-- Result card -->
+            <div id="vresult-card" class="w-full rounded-xl p-4 hidden" style="border:1px solid rgba(255,255,255,0.08)">
+              <div class="flex items-center gap-3 mb-3">
+                <span id="vcard-badge"
+                  class="text-xs font-bold uppercase tracking-wider px-2 py-1 rounded-full">–</span>
+                <span id="vcard-cosine" class="font-mono text-xs text-muted">cosine –</span>
+              </div>
+              <!-- 5-segment bar -->
+              <div class="flex gap-1 h-2 rounded-full overflow-hidden mb-2">
+                <div id="vseg0" class="flex-1 rounded-full transition-all" style="background:rgba(255,255,255,0.08)">
+                </div>
+                <div id="vseg1" class="flex-1 rounded-full transition-all" style="background:rgba(255,255,255,0.08)">
+                </div>
+                <div id="vseg2" class="flex-1 rounded-full transition-all" style="background:rgba(255,255,255,0.08)">
+                </div>
+                <div id="vseg3" class="flex-1 rounded-full transition-all" style="background:rgba(255,255,255,0.08)">
+                </div>
+                <div id="vseg4" class="flex-1 rounded-full transition-all" style="background:rgba(255,255,255,0.08)">
+                </div>
+              </div>
+              <div class="flex justify-between text-[10px] text-muted">
+                <span>No Match</span><span>Weak</span><span>Partial</span><span>Strong</span><span>Perfect</span>
+              </div>
+              <p id="vcard-desc" class="text-sm text-secondary mt-3"></p>
+            </div>
+
+            <!-- History -->
+            <div id="vhistory" class="w-full hidden">
+              <p class="text-xs text-muted mb-2 uppercase tracking-wider font-semibold">Recent Tests</p>
+              <div id="vhistory-list" class="space-y-1.5 max-h-36 overflow-y-auto pr-1"></div>
+            </div>
+          </div>
+        </div><!-- /grid -->
+      </div><!-- /verifier-panel -->
+    </div>
+  </section>
+
+  <!-- ═══ ZONE B: DOCUMENTATION ═══ -->
+  <div id="core-api" style="background:#0D1117" class="border-t border-white/[0.06]">
+    <div class="max-w-[1400px] mx-auto flex">
+      <!-- LEFT SIDEBAR -->
+      <aside
+        class="hidden lg:block w-60 shrink-0 sticky top-16 self-start h-[calc(100vh-4rem)] overflow-y-auto py-8 px-3"
+        style="background:#0A0C10">
+        <p class="doc-cat">Getting Started</p>
+        <a href="#installation" class="doc-link active">Installation</a>
+        <a href="#quickstart" class="doc-link">Quick Start</a>
+        <a href="#requirements" class="doc-link">Requirements</a>
+
+        <p class="doc-cat">Core API</p>
+        <a href="#voiceauth" class="doc-link">VoiceAuth()</a>
+        <a href="#verify" class="doc-link">.verify()</a>
+        <a href="#enroll" class="doc-link">.enroll()</a>
+        <a href="#batch" class="doc-link">.batch_verify()</a>
+
+        <p class="doc-cat">Integrations</p>
+        <a href="#fastapi" class="doc-link">FastAPI</a>
+        <a href="#django" class="doc-link">Django</a>
+        <a href="#flask" class="doc-link">Flask</a>
+        <a href="#node" class="doc-link">Node.js (wrapper)</a>
+
+        <p class="doc-cat">Advanced</p>
+        <a href="#threshold" class="doc-link">Threshold Tuning</a>
+        <a href="#export" class="doc-link">Embedding Export</a>
+        <a href="#offline" class="doc-link">Offline Mode</a>
+      </aside>
+
+      <!-- MAIN CONTENT -->
+      <main class="flex-1 min-w-0 px-6 md:px-12 py-12 doc-body">
+        <h2 id="installation" class="doc-h2 !mt-0">Installation</h2>
+        <p>Install from the local wheel file you just downloaded:</p>
+        <div class="codeblk"><button class="copy-btn" onclick="copyCode(this,'pip install voiceauth.whl')"><i
+              class="fa-regular fa-copy text-xs"></i></button>
+          <pre><code><span class="tok-com">$</span> pip install voiceauth.whl</code></pre>
+        </div>
+        <p>Or install the latest release from PyPI:</p>
+        <div class="codeblk"><button class="copy-btn" onclick="copyCode(this,'pip install voiceauth')"><i
+              class="fa-regular fa-copy text-xs"></i></button>
+          <pre><code><span class="tok-com">$</span> pip install voiceauth</code></pre>
+        </div>
+
+        <h2 id="quickstart" class="doc-h2">Quick Start</h2>
+        <div class="flex gap-1 mb-2 text-xs font-mono">
+          <button class="lang-tab active px-3 py-1 rounded text-cyan-400 bg-cyan-400/10">Python</button>
+          <button class="lang-tab px-3 py-1 rounded text-secondary">FastAPI</button>
+          <button class="lang-tab px-3 py-1 rounded text-secondary">Node</button>
+        </div>
+        <div class="codeblk"><button class="copy-btn" onclick="copyCode(this,this.parentElement.innerText)"><i
+              class="fa-regular fa-copy text-xs"></i></button>
+          <pre><code><span class="tok-kw">from</span> voiceauth <span class="tok-kw">import</span> <span class="tok-fn">VoiceAuth</span>
+
+<span class="tok-com"># Initialize with your embedding</span>
+auth = <span class="tok-fn">VoiceAuth</span>(
+    embedding_path=<span class="tok-str">"user_embed.npy"</span>,
+    threshold=<span class="tok-num">0.82</span>  <span class="tok-com"># adjust sensitivity</span>
+)
+
+<span class="tok-com"># Verify a speaker</span>
+result = auth.<span class="tok-fn">verify</span>(<span class="tok-str">"audio_sample.wav"</span>)
+<span class="tok-fn">print</span>(result)
+<span class="tok-com"># → {"authenticated": True,</span>
+<span class="tok-com">#    "confidence": 0.94,</span>
+<span class="tok-com">#    "latency_ms": 43}</span></code></pre>
+        </div>
+
+        <div class="callout-info">
+          <p class="!mb-0 text-sm"><i class="fa-solid fa-circle-info text-indigo-400 mr-2"></i><strong
+              class="text-white">INFO</strong><br>The threshold value controls sensitivity. Higher = stricter.
+            Recommended range: <span class="font-mono text-cyan-400">0.80–0.88</span></p>
+        </div>
+
+        <h2 id="requirements" class="doc-h2">Requirements</h2>
+        <table class="doc-table">
+          <thead>
+            <tr>
+              <th>Dependency</th>
+              <th>Version</th>
+              <th>Notes</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>python</td>
+              <td>≥ 3.9</td>
+              <td>3.11 recommended</td>
+            </tr>
+            <tr>
+              <td>numpy</td>
+              <td>≥ 1.22</td>
+              <td>Vector ops</td>
+            </tr>
+            <tr>
+              <td>torch</td>
+              <td>≥ 2.0</td>
+              <td>ECapa inference</td>
+            </tr>
+            <tr>
+              <td>librosa</td>
+              <td>≥ 0.10</td>
+              <td>Audio I/O</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <h2 id="voiceauth" class="doc-h2">VoiceAuth() — Constructor</h2>
+        <p>Creates an authenticator bound to a stored voice embedding.</p>
+        <table class="doc-table">
+          <thead>
+            <tr>
+              <th>Parameter</th>
+              <th>Type</th>
+              <th>Default</th>
+              <th>Description</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>embedding_path</td>
+              <td>str</td>
+              <td>required</td>
+              <td>Path to .npy embedding</td>
+            </tr>
+            <tr>
+              <td>threshold</td>
+              <td>float</td>
+              <td>0.82</td>
+              <td>Cosine similarity cutoff</td>
+            </tr>
+            <tr>
+              <td>sample_rate</td>
+              <td>int</td>
+              <td>16000</td>
+              <td>Expected audio sample rate</td>
+            </tr>
+            <tr>
+              <td>device</td>
+              <td>str</td>
+              <td>"cpu"</td>
+              <td>"cpu" or "cuda"</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <h2 id="verify" class="doc-h2">.verify() — Method</h2>
+        <p>Signature: <span class="sig">auth.verify(audio_path: str) → dict</span></p>
+        <div class="codeblk"><button class="copy-btn" onclick="copyCode(this,this.parentElement.innerText)"><i
+              class="fa-regular fa-copy text-xs"></i></button>
+          <pre><code>{
+  <span class="tok-str">"authenticated"</span>: bool,
+  <span class="tok-str">"confidence"</span>: float,  <span class="tok-com"># 0.0 to 1.0</span>
+  <span class="tok-str">"latency_ms"</span>: int
+}</code></pre>
+        </div>
+        <div class="callout-warn">
+          <p class="!mb-0 text-sm"><i class="fa-solid fa-triangle-exclamation text-amber-400 mr-2"></i><strong
+              class="text-white">WARNING</strong><br>Audio file must be mono, 16kHz WAV. Use <span
+              class="font-mono text-amber-300">preprocess_audio()</span> helper if unsure.</p>
+        </div>
+
+        <h2 id="enroll" class="doc-h2">.enroll() — Method</h2>
+        <p>Register a new voiceprint from one or more samples. Signature: <span class="sig">auth.enroll(samples:
+            list[str]) → np.ndarray</span></p>
+        <div class="codeblk"><button class="copy-btn" onclick="copyCode(this,this.parentElement.innerText)"><i
+              class="fa-regular fa-copy text-xs"></i></button>
+          <pre><code>embed = auth.<span class="tok-fn">enroll</span>([<span class="tok-str">"s1.wav"</span>, <span class="tok-str">"s2.wav"</span>, <span class="tok-str">"s3.wav"</span>])
+np.<span class="tok-fn">save</span>(<span class="tok-str">"user_embed.npy"</span>, embed)</code></pre>
+        </div>
+
+        <h2 id="batch" class="doc-h2">.batch_verify() — Method</h2>
+        <p>1:N speaker search across many enrolled embeddings. Signature: <span class="sig">auth.batch_verify(audio,
+            embeds: dict) → dict</span></p>
+
+        <h2 id="fastapi" class="doc-h2">FastAPI Integration</h2>
+        <div class="codeblk"><button class="copy-btn" onclick="copyCode(this,this.parentElement.innerText)"><i
+              class="fa-regular fa-copy text-xs"></i></button>
+          <pre><code><span class="tok-kw">from</span> fastapi <span class="tok-kw">import</span> FastAPI, UploadFile
+<span class="tok-kw">from</span> voiceauth <span class="tok-kw">import</span> <span class="tok-fn">VoiceAuth</span>
+
+app = <span class="tok-fn">FastAPI</span>()
+auth = <span class="tok-fn">VoiceAuth</span>(<span class="tok-str">"embed.npy"</span>)
+
+<span class="tok-fn">@app.post</span>(<span class="tok-str">"/verify"</span>)
+<span class="tok-kw">async def</span> <span class="tok-fn">verify_voice</span>(file: UploadFile):
+    content = <span class="tok-kw">await</span> file.<span class="tok-fn">read</span>()
+    result = auth.<span class="tok-fn">verify_bytes</span>(content)
+    <span class="tok-kw">return</span> result</code></pre>
+        </div>
+
+        <h2 id="django" class="doc-h2">Django Integration</h2>
+        <p>Wrap <span class="sig">VoiceAuth</span> in a singleton service and call it from a DRF view. Initialize once
+          at app startup to avoid reloading the model per request.</p>
+
+        <h2 id="flask" class="doc-h2">Flask Integration</h2>
+        <div class="codeblk"><button class="copy-btn" onclick="copyCode(this,this.parentElement.innerText)"><i
+              class="fa-regular fa-copy text-xs"></i></button>
+          <pre><code><span class="tok-kw">from</span> flask <span class="tok-kw">import</span> Flask, request
+auth = <span class="tok-fn">VoiceAuth</span>(<span class="tok-str">"embed.npy"</span>)
+
+<span class="tok-fn">@app.route</span>(<span class="tok-str">"/verify"</span>, methods=[<span class="tok-str">"POST"</span>])
+<span class="tok-kw">def</span> <span class="tok-fn">verify</span>():
+    f = request.files[<span class="tok-str">"audio"</span>]
+    <span class="tok-kw">return</span> auth.<span class="tok-fn">verify_bytes</span>(f.<span class="tok-fn">read</span>())</code></pre>
+        </div>
+
+        <h2 id="node" class="doc-h2">Node.js (wrapper)</h2>
+        <p>Spawn the Python CLI from Node via <span class="sig">child_process</span>, or call your FastAPI endpoint over
+          HTTP. A native wrapper is on the roadmap.</p>
+
+        <h2 id="threshold" class="doc-h2">Threshold Tuning</h2>
+        <p>Lower thresholds reduce false rejects (better UX); higher thresholds reduce false accepts (better security).
+          Tune against your own balanced test set.</p>
+        <table class="doc-table">
+          <thead>
+            <tr>
+              <th>Threshold</th>
+              <th>Behavior</th>
+              <th>Use case</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>0.75</td>
+              <td>Lenient</td>
+              <td>Low-risk IVR menus</td>
+            </tr>
+            <tr>
+              <td>0.82</td>
+              <td>Balanced</td>
+              <td>Default / most apps</td>
+            </tr>
+            <tr>
+              <td>0.88</td>
+              <td>Strict</td>
+              <td>Financial / admin access</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <h2 id="export" class="doc-h2">Embedding Export</h2>
+        <p>Embeddings are portable <span class="sig">.npy</span> float32 arrays of shape <span
+            class="font-mono text-cyan-400">(192,)</span>. Store them in your DB as base64 or a blob — no cloud
+          dependency required.</p>
+
+        <h2 id="offline" class="doc-h2">Offline Mode</h2>
+        <p>The wheel bundles the ECapa weights. After install, <strong class="text-white">no network access is
+            required</strong> — perfect for air-gapped and on-prem deployments.</p>
+
+        <!-- prev / next -->
+        <div class="flex justify-between mt-16 pt-8 border-t border-white/[0.06]">
+          <a href="onboarding-processing.html" class="btn-ghost"><i class="fa-solid fa-arrow-left text-sm"></i>
+            Previous: Processing</a>
+          <a href="#threshold" class="btn-ghost">Next: Advanced <i class="fa-solid fa-arrow-right text-sm"></i></a>
+        </div>
+      </main>
+
+      <!-- RIGHT TOC -->
+      <aside
+        class="hidden xl:block w-52 shrink-0 sticky top-16 self-start h-[calc(100vh-4rem)] overflow-y-auto py-12 px-4">
+        <p class="text-xs uppercase tracking-wider text-muted font-semibold mb-3">On this page</p>
+        <a href="#installation" class="toc-link">Installation</a>
+        <a href="#quickstart" class="toc-link">Quick Start</a>
+        <a href="#voiceauth" class="toc-link">VoiceAuth()</a>
+        <a href="#verify" class="toc-link">.verify()</a>
+        <a href="#fastapi" class="toc-link">FastAPI</a>
+        <a href="#threshold" class="toc-link">Threshold Tuning</a>
+      </aside>
+    </div>
+  </div>
+
+  <div id="footer-mount"></div>
+
+  <script src="js/api.js"></script>
+  <script src="js/main.js"></script>
+  <script src="js/hero-shader.js"></script>
+  <script>
+    document.getElementById('nav-mount').innerHTML = renderNavbar('docs');
+    document.getElementById('footer-mount').innerHTML = renderFooter();
+    initHeroShader('dl-canvas');
+
+    // ── Show correct hero state based on session + API status ────────────────
+    async function initDownloadHero() {
+      const user = Session.get();
+
+      if (!user) {
+        document.getElementById('dl-hero-nologin').style.display = 'block';
+        return;
+      }
+
+      document.getElementById('dl-hero-loading').style.display = 'block';
+
+      try {
+        const data = await apiStatus(user.email);
+
+        document.getElementById('dl-hero-loading').style.display = 'none';
+
+        if (data.whl_ready) {
+          // Update session
+          Session.save({ ...user, whl_ready: true });
+
+          // Show ready state
+          document.getElementById('dl-hero-ready').style.display = 'block';
+
+          // Set filename label
+          const fname = data.whl_filename || 'voiceauth.whl';
+          document.getElementById('dl-filename-label').textContent = fname;
+          document.getElementById('dl-btn-label').innerHTML =
+            `Download ${fname}<br><span class="text-xs font-normal opacity-80">Python 3.9+ · Click to download</span>`;
+
+          // Wire download button
+          const btn = document.getElementById('real-download-btn');
+          btn.href = apiDownloadUrl(user.email);
+
+        } else {
+          document.getElementById('dl-hero-notready').style.display = 'block';
+        }
+      } catch (err) {
+        document.getElementById('dl-hero-loading').style.display = 'none';
+        document.getElementById('dl-hero-nologin').style.display = 'block';
+        console.warn('Status error:', err.message);
+      }
+    }
+
+    function triggerDownload(e) {
+      // Let the native anchor href handle it (set dynamically above)
+      // Just update button text briefly
+      const btn = e.currentTarget;
+      const orig = btn.innerHTML;
+      btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i><span class="text-left leading-tight">Preparing download…</span>';
+      setTimeout(() => { btn.innerHTML = orig; }, 2500);
+    }
+
+    initDownloadHero();
+
+    // language tabs (visual)
+    document.querySelectorAll('.lang-tab').forEach(tab => {
+      tab.addEventListener('click', () => {
+        const group = tab.parentElement.querySelectorAll('.lang-tab');
+        group.forEach(t => { t.classList.remove('active', 'text-cyan-400', 'bg-cyan-400/10'); t.classList.add('text-secondary'); });
+        tab.classList.add('active', 'text-cyan-400', 'bg-cyan-400/10'); tab.classList.remove('text-secondary');
+      });
+    });
+
+    // scroll-spy for sidebar
+    const links = document.querySelectorAll('.doc-link');
+    const sections = Array.from(links).map(l => document.querySelector(l.getAttribute('href'))).filter(Boolean);
+    const spy = new IntersectionObserver((entries) => {
+      entries.forEach(e => {
+        if (e.isIntersecting) {
+          links.forEach(l => l.classList.toggle('active', l.getAttribute('href') === '#' + e.target.id));
+        }
+      });
+    }, { rootMargin: '-80px 0px -70% 0px' });
+    sections.forEach(s => spy.observe(s));
+  </script>
+
+  <!-- ═══ VOICE VERIFIER LOGIC ═══ -->
+  <script>
+    /* ─── state ─────────────────────────────────────── */
+    const VState = {
+      mode: 'rec',    // 'rec' | 'up'
+      blob: null,     // recorded Blob
+      file: null,     // uploaded File
+      stream: null,
+      recorder: null,
+      chunks: [],
+      timer: null,
+      seconds: 0,
+      audioEl: null,
+      history: [],
+    };
+
+    /* ─── init: show/hide panel based on session ───── */
+    (function initVerifier() {
+      const user = Session.get();
+      if (!user) {
+        document.getElementById('verifier-gate-locked').classList.remove('hidden');
+        return;
+      }
+      // Show panel regardless — let them try even if whl not ready
+      document.getElementById('verifier-panel').classList.remove('hidden');
+    })();
+
+    /* ─── tab switch ────────────────────────────────── */
+    function vswitchTab(t) {
+      ['rec', 'up'].forEach(x => {
+        document.getElementById('vtab-' + x).className =
+          'flex-1 py-2 rounded-full text-xs font-semibold transition ' +
+          (x === t ? 'bg-indigo-500 text-white' : 'text-secondary');
+        document.getElementById('vpanel-' + x).classList.toggle('hidden', x !== t);
+      });
+      VState.mode = t;
+      vcheckReady();
+    }
+
+    /* ─── recording ─────────────────────────────────── */
+    async function vtoggleRecord() {
+      if (VState.recorder && VState.recorder.state === 'recording') {
+        vstopRecord(); return;
+      }
+      vclearRec();
+      try {
+        VState.stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      } catch (e) {
+        vshowErr('Microphone access denied — use the Upload tab.');
+        return;
+      }
+      VState.chunks = [];
+      VState.seconds = 0;
+      VState.recorder = new MediaRecorder(VState.stream);
+      VState.recorder.ondataavailable = e => VState.chunks.push(e.data);
+      VState.recorder.onstop = vonRecStop;
+      VState.recorder.start();
+
+      const mic = document.getElementById('vmic');
+      mic.style.borderColor = '#EF4444';
+      mic.style.background = 'rgba(239,68,68,0.1)';
+      document.getElementById('vmic-icon').className = 'fa-solid fa-stop text-4xl text-red-400';
+      document.getElementById('vmic-dot').classList.remove('hidden');
+      document.getElementById('vmic-label').textContent = 'Recording… tap to stop';
+      document.getElementById('vmic-timer').classList.remove('hidden');
+
+      VState.timer = setInterval(() => {
+        VState.seconds++;
+        const m = String(Math.floor(VState.seconds / 60)).padStart(2, '0');
+        const s = String(VState.seconds % 60).padStart(2, '0');
+        document.getElementById('vmic-timer').textContent = `${m}:${s}`;
+        if (VState.seconds >= 60) vstopRecord();
+      }, 1000);
+    }
+
+    function vstopRecord() {
+      clearInterval(VState.timer);
+      if (VState.recorder && VState.recorder.state === 'recording') VState.recorder.stop();
+      if (VState.stream) { VState.stream.getTracks().forEach(t => t.stop()); VState.stream = null; }
+    }
+
+    function vonRecStop() {
+      const mime = VState.recorder.mimeType || 'audio/webm';
+      VState.blob = new Blob(VState.chunks, { type: mime });
+
+      const mic = document.getElementById('vmic');
+      mic.style.borderColor = '#22C55E';
+      mic.style.background = 'rgba(34,197,94,0.08)';
+      document.getElementById('vmic-icon').className = 'fa-solid fa-check text-4xl text-green-400';
+      document.getElementById('vmic-dot').classList.add('hidden');
+      document.getElementById('vmic-label').textContent = `Captured (${VState.seconds}s)`;
+      document.getElementById('vmic-timer').classList.add('hidden');
+
+      // Mini waveform
+      const wave = document.getElementById('vwave');
+      wave.innerHTML = '';
+      for (let i = 0; i < 40; i++) {
+        const b = document.createElement('span');
+        b.style.cssText = `display:inline-block;width:3px;border-radius:2px;background:#818CF8;height:${20 + Math.abs(Math.sin(i * .7)) * 60 + Math.random() * 20}%`;
+        wave.appendChild(b);
+      }
+      document.getElementById('vplayback').classList.remove('hidden');
+      vcheckReady();
+    }
+
+    function vclearRec() {
+      VState.blob = null; VState.chunks = [];
+      clearInterval(VState.timer);
+      if (VState.stream) { VState.stream.getTracks().forEach(t => t.stop()); VState.stream = null; }
+      const mic = document.getElementById('vmic');
+      mic.style.borderColor = '';
+      mic.style.background = 'rgba(99,102,241,0.06)';
+      document.getElementById('vmic-icon').className = 'fa-solid fa-microphone text-4xl text-indigo-300';
+      document.getElementById('vmic-dot').classList.add('hidden');
+      document.getElementById('vmic-label').textContent = 'Tap to record';
+      document.getElementById('vmic-timer').classList.add('hidden');
+      document.getElementById('vplayback').classList.add('hidden');
+      vcheckReady();
+    }
+
+    function vplayback() {
+      if (!VState.blob) return;
+      if (VState.audioEl) { VState.audioEl.pause(); VState.audioEl = null; }
+      const url = URL.createObjectURL(VState.blob);
+      VState.audioEl = new Audio(url);
+      VState.audioEl.play();
+      document.getElementById('vplay-icon').className = 'fa-solid fa-pause text-xs';
+      VState.audioEl.onended = () => { document.getElementById('vplay-icon').className = 'fa-solid fa-play text-xs'; };
+    }
+
+    /* ─── file upload ───────────────────────────────── */
+    function vhandleFile(input) {
+      const f = input.files[0];
+      if (!f) return;
+      VState.file = f;
+      document.getElementById('vfile-label').textContent = f.name;
+      document.getElementById('vfile-name').classList.remove('hidden');
+      vcheckReady();
+    }
+
+    function vclearFile() {
+      VState.file = null;
+      document.getElementById('vfile-input').value = '';
+      document.getElementById('vfile-name').classList.add('hidden');
+      vcheckReady();
+    }
+
+    /* ─── ready state ───────────────────────────────── */
+    function vcheckReady() {
+      const ready = VState.mode === 'rec' ? !!VState.blob : !!VState.file;
+      const btn = document.getElementById('vsubmit-btn');
+      btn.disabled = !ready;
+      btn.style.opacity = ready ? '1' : '.45';
+      btn.style.cursor = ready ? 'pointer' : 'not-allowed';
+    }
+
+    function vshowErr(msg) {
+      const el = document.getElementById('verr');
+      el.textContent = msg;
+      el.classList.remove('hidden');
+      setTimeout(() => el.classList.add('hidden'), 6000);
+    }
+
+    /* ─── run verification ──────────────────────────── */
+    async function runVerify() {
+      const user = Session.get();
+      if (!user) { vshowErr('You must be logged in to verify.'); return; }
+
+      const audioBlob = VState.mode === 'rec' ? VState.blob : VState.file;
+      const fname = VState.mode === 'rec'
+        ? `verify_${Date.now()}.webm`
+        : VState.file.name;
+
+      if (!audioBlob) { vshowErr('No audio provided.'); return; }
+
+      const btn = document.getElementById('vsubmit-btn');
+      setLoading(btn, true);
+      document.getElementById('verr').classList.add('hidden');
+
+      // Show spinner in gauge
+      document.getElementById('vresult-icon').className = 'fa-solid fa-spinner fa-spin text-3xl text-indigo-300';
+      document.getElementById('vresult-pct').textContent = '…';
+      document.getElementById('vresult-label').textContent = 'Analysing';
+
+      try {
+        const data = await apiVerify(user.email, audioBlob, fname);
+        renderResult(data);
+      } catch (err) {
+        vshowErr('⚠ ' + err.message);
+        document.getElementById('vresult-icon').className = 'fa-solid fa-xmark-circle text-3xl text-red-400';
+        document.getElementById('vresult-pct').textContent = '–%';
+        document.getElementById('vresult-label').textContent = 'Error';
+      } finally {
+        setLoading(btn, false, '<i class="fa-solid fa-bolt"></i> Verify Voice');
+      }
+    }
+
+    /* ─── render result ─────────────────────────────── */
+    const COLORS = {
+      green: { stroke: '#22C55E', badge: 'rgba(34,197,94,0.15)', badgeTxt: '#22C55E', card: 'rgba(34,197,94,0.06)', desc: 'Excellent — your voice is a strong, confident match to the registered embedding.' },
+      amber: { stroke: '#F59E0B', badge: 'rgba(245,158,11,0.15)', badgeTxt: '#F59E0B', card: 'rgba(245,158,11,0.06)', desc: 'Good — your voice is a reasonable match. Background noise or a different mic may be reducing accuracy.' },
+      orange: { stroke: '#F97316', badge: 'rgba(249,115,22,0.15)', badgeTxt: '#F97316', card: 'rgba(249,115,22,0.06)', desc: 'Borderline — some features overlap but the similarity is low. Try recording in a quieter environment.' },
+      red: { stroke: '#EF4444', badge: 'rgba(239,68,68,0.15)', badgeTxt: '#EF4444', card: 'rgba(239,68,68,0.06)', desc: 'No match detected — this voice does not correspond to the registered voiceprint.' },
+    };
+
+    function renderResult(data) {
+      const { confidence, cosine_score, label, color, icon } = data;
+      const cfg = COLORS[color] || COLORS.red;
+
+      // Gauge fill (circumference = 2π×80 ≈ 502)
+      const circ = 502;
+      const offset = circ - (confidence / 100) * circ;
+      const gauge = document.getElementById('vgauge-fill');
+      gauge.style.strokeDashoffset = offset;
+      gauge.style.stroke = cfg.stroke;
+
+      // Centre text
+      document.getElementById('vresult-icon').className = `fa-solid fa-${icon} text-3xl`;
+      document.getElementById('vresult-icon').style.color = cfg.stroke;
+      document.getElementById('vresult-pct').textContent = confidence.toFixed(1) + '%';
+      document.getElementById('vresult-label').textContent = label;
+      document.getElementById('vresult-label').style.color = cfg.stroke;
+
+      // Card
+      const card = document.getElementById('vresult-card');
+      card.classList.remove('hidden');
+      card.style.background = cfg.card;
+      card.style.borderColor = cfg.stroke + '40';
+
+      const badge = document.getElementById('vcard-badge');
+      badge.textContent = label;
+      badge.style.background = cfg.badge;
+      badge.style.color = cfg.badgeTxt;
+
+      // Show raw cosine + the boosted display % so users understand the mapping
+      const rawPct = (cosine_score * 100).toFixed(1);
+      document.getElementById('vcard-cosine').textContent =
+        `cosine ${cosine_score.toFixed(4)}  ·  raw ${rawPct}% + 20 boost = ${confidence.toFixed(1)}%`;
+      document.getElementById('vcard-desc').textContent = cfg.desc;
+
+      // 5-segment quality bar
+      const segs = [0, 1, 2, 3, 4].map(i => document.getElementById('vseg' + i));
+      const filled = Math.ceil((confidence / 100) * 5);
+      segs.forEach((s, i) => {
+        s.style.background = i < filled ? cfg.stroke : 'rgba(255,255,255,0.08)';
+        s.style.opacity = i < filled ? '1' : '0.3';
+      });
+
+      // History
+      addToHistory(confidence, label, color, cfg.stroke);
+    }
+
+    function addToHistory(pct, label, color, stroke) {
+      VState.history.unshift({ pct, label, stroke, time: new Date().toLocaleTimeString() });
+      if (VState.history.length > 8) VState.history.pop();
+
+      const hist = document.getElementById('vhistory');
+      const list = document.getElementById('vhistory-list');
+      hist.classList.remove('hidden');
+      list.innerHTML = '';
+
+      VState.history.forEach(h => {
+        const row = document.createElement('div');
+        row.style.cssText = 'display:flex;align-items:center;gap:.5rem;padding:.35rem .6rem;border-radius:.5rem;background:rgba(255,255,255,0.03);font-size:.75rem;';
+        row.innerHTML = `
+          <span style="width:8px;height:8px;border-radius:50%;background:${h.stroke};flex-shrink:0"></span>
+          <span style="flex:1;color:#94A3B8">${h.label}</span>
+          <span style="font-family:monospace;color:${h.stroke};font-weight:700">${h.pct.toFixed(1)}%</span>
+          <span style="color:#475569">${h.time}</span>`;
+        list.appendChild(row);
+      });
+    }
+  </script>
+</body>
+
+</html>

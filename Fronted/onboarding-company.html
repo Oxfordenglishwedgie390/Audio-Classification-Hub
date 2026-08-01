@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Bulk Upload · Audio Classification Hub</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link
+    href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700;800&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
+    rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="css/style.css" />
+  <style>
+    table {
+      border-collapse: collapse;
+      width: 100%;
+    }
+
+    th,
+    td {
+      padding: 0.85rem 1rem;
+      text-align: left;
+      font-size: 0.9rem;
+    }
+
+    th {
+      font-weight: 600;
+      color: var(--text-secondary);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    tbody tr {
+      border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+    }
+
+    tbody tr:nth-child(odd) {
+      background: rgba(255, 255, 255, 0.02);
+    }
+
+    .badge {
+      font-size: 0.75rem;
+      padding: 0.2rem 0.6rem;
+      border-radius: 9999px;
+      font-weight: 500;
+    }
+
+    #csv-overlay.show {
+      display: flex;
+    }
+  </style>
+</head>
+
+<body>
+  <div id="nav-mount"></div>
+
+  <main class="max-w-5xl mx-auto px-6 pt-32 pb-24">
+    <div class="stepper mb-12">
+      <div class="step done"><span class="step-dot"><i class="fa-solid fa-check text-xs"></i></span><span
+          class="step-label">Type</span></div>
+      <span class="step-line"></span>
+      <div class="step active"><span class="step-dot">2</span><span class="step-label">Upload</span></div>
+      <span class="step-line"></span>
+      <div class="step"><span class="step-dot">3</span><span class="step-label">Process</span></div>
+      <span class="step-line"></span>
+      <div class="step"><span class="step-dot">4</span><span class="step-label">Download</span></div>
+    </div>
+
+    <div class="flex flex-wrap items-end justify-between gap-4 mb-8">
+      <div>
+        <h1 class="section-title mb-2">Bulk voice enrollment</h1>
+        <p class="text-secondary">Select a main folder containing subfolders for each team member. Each subfolder must
+          contain 5 to 20 audio samples.</p>
+      </div>
+    </div>
+
+    <div class="glass overflow-hidden p-8" id="dropzone">
+      <div
+        class="border-2 border-dashed border-white/15 rounded-2xl p-12 text-center cursor-pointer transition hover:bg-white/5"
+        onclick="document.getElementById('folder-input').click()">
+        <i class="fa-solid fa-folder-open text-4xl text-indigo-300 mb-4 up-arrow"></i>
+        <h3 class="font-semibold text-lg mb-1">Select Company Folder</h3>
+        <p class="text-secondary text-sm mb-3">Structure: MainFolder / PersonName / audio.wav</p>
+        <p class="text-xs text-muted">Each person must have between 5 and 20 audio files (.wav, .mp3, .flac).</p>
+        <input type="file" id="folder-input" webkitdirectory directory multiple class="hidden"
+          onchange="handleFolderSelect(event)">
+      </div>
+    </div>
+
+    <div id="validation-results" class="mt-8 hidden">
+      <h3 class="text-lg font-semibold mb-4">Detected People</h3>
+      <div class="glass overflow-hidden">
+        <table>
+          <thead>
+            <tr>
+              <th>Person Name</th>
+              <th>Files Found</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody id="people-list">
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div id="error-message" class="mt-6 text-red-400 text-center font-medium hidden"></div>
+
+    <div class="text-center mt-12">
+      <button id="process-btn" class="btn-primary hidden" onclick="submitCompanyData()">
+        Process Company Classification <i class="fa-solid fa-arrow-right text-sm ml-2"></i>
+      </button>
+    </div>
+  </main>
+
+  <script src="js/api.js"></script>
+  <script src="js/main.js"></script>
+  <script>
+    const __user = Session.requireAuth('auth.html');
+    if (!__user) throw new Error('Not logged in');
+    document.getElementById('nav-mount').innerHTML = renderNavbar();
+
+    let validFilesToUpload = [];
+
+    function handleFolderSelect(event) {
+      const files = event.target.files;
+      if (!files || files.length === 0) return;
+
+      const peopleMap = new Map();
+      const allowedExts = ['.wav', '.mp3', '.flac', '.ogg'];
+
+      for (let i = 0; i < files.length; i++) {
+        const file = files[i];
+        // file.webkitRelativePath looks like "MainFolder/PersonName/audio.wav"
+        const parts = file.webkitRelativePath.split('/');
+
+        // We only care about files nested as MainFolder/PersonName/file
+        if (parts.length >= 3) {
+          const personName = parts[1];
+          const ext = file.name.substring(file.name.lastIndexOf('.')).toLowerCase();
+
+          if (allowedExts.includes(ext)) {
+            if (!peopleMap.has(personName)) {
+              peopleMap.set(personName, []);
+            }
+            peopleMap.get(personName).push({
+              file: file,
+              path: `${personName}/${file.name}` // sending just person/filename
+            });
+          }
+        }
+      }
+
+      displayValidation(peopleMap);
+    }
+
+    function displayValidation(peopleMap) {
+      const tbody = document.getElementById('people-list');
+      const resultsDiv = document.getElementById('validation-results');
+      const errorMsg = document.getElementById('error-message');
+      const processBtn = document.getElementById('process-btn');
+
+      tbody.innerHTML = '';
+      resultsDiv.classList.remove('hidden');
+      errorMsg.classList.add('hidden');
+      validFilesToUpload = [];
+
+      let allValid = true;
+      let totalPeople = 0;
+
+      peopleMap.forEach((files, personName) => {
+        totalPeople++;
+        const tr = document.createElement('tr');
+        const count = files.length;
+        let statusHtml = '';
+
+        if (count < 5) {
+          statusHtml = '<span class="badge" style="background:rgba(239,68,68,0.15);color:#EF4444">Too few (min 5)</span>';
+          allValid = false;
+        } else if (count > 20) {
+          statusHtml = '<span class="badge" style="background:rgba(239,68,68,0.15);color:#EF4444">Too many (max 20)</span>';
+          allValid = false;
+        } else {
+          statusHtml = '<span class="badge" style="background:rgba(34,197,94,0.15);color:#22C55E">Valid</span>';
+          validFilesToUpload.push(...files);
+        }
+
+        tr.innerHTML = `
+          <td class="font-medium">${personName}</td>
+          <td class="text-secondary">${count} file(s)</td>
+          <td>${statusHtml}</td>
+        `;
+        tbody.appendChild(tr);
+      });
+
+      if (totalPeople === 0) {
+        errorMsg.textContent = "No valid audio files found in subfolders. Ensure structure is MainFolder / PersonName / audio.wav";
+        errorMsg.classList.remove('hidden');
+        processBtn.classList.add('hidden');
+      } else if (!allValid) {
+        errorMsg.textContent = "Please fix errors above. Each person must have 5 to 20 files.";
+        errorMsg.classList.remove('hidden');
+        processBtn.classList.add('hidden');
+      } else {
+        processBtn.classList.remove('hidden');
+      }
+    }
+
+    async function submitCompanyData() {
+      if (validFilesToUpload.length === 0) return;
+
+      const btn = document.getElementById('process-btn');
+      setLoading(btn, true);
+
+      const fd = new FormData();
+      fd.append('email', __user.email);
+
+      validFilesToUpload.forEach((item) => {
+        fd.append('files', item.file, item.path);
+      });
+
+      try {
+        const res = await fetch(`${API_BASE}/api/process_company`, { method: 'POST', body: fd });
+        const data = await safeJson(res);
+        if (!res.ok) throw new Error(data.detail || 'Processing failed');
+
+        if (data.message) {
+          sessionStorage.setItem('process_message', data.message);
+        }
+
+        // Go to processing screen
+        window.location.href = 'onboarding-processing.html';
+      } catch (err) {
+        const errDiv = document.getElementById('error-message');
+        errDiv.textContent = '⚠ ' + err.message;
+        errDiv.classList.remove('hidden');
+        setLoading(btn, false);
+      }
+    }
+  </script>
+  <style>
+    table {
+      border-collapse: collapse;
+      width: 100%;
+    }
+
+    th,
+    td {
+      padding: 0.85rem 1rem;
+      text-align: left;
+      font-size: 0.9rem;
+    }
+
+    th {
+      font-weight: 600;
+      color: var(--text-secondary);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    tbody tr {
+      border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+    }
+
+    tbody tr:nth-child(odd) {
+      background: rgba(255, 255, 255, 0.02);
+    }
+
+    .badge {
+      font-size: 0.75rem;
+      padding: 0.2rem 0.6rem;
+      border-radius: 9999px;
+      font-weight: 500;
+    }
+
+    .up-arrow {
+      animation: upBounce 1.6s ease-in-out infinite
+    }
+
+    @keyframes upBounce {
+
+      0%,
+      100% {
+        transform: translateY(0)
+      }
+
+      50% {
+        transform: translateY(-8px)
+      }
+    }
+  </style>
+</body>
+
+</html>

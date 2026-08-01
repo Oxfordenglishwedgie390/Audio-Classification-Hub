@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Record Your Voice · Audio Classification Hub</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link
+    href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700;800&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
+    rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="css/style.css" />
+  <style>
+    #mic-circle.recording {
+      border-color: #00D4FF;
+    }
+
+    #mic-circle.done {
+      border-color: #22C55E;
+    }
+
+    .rec-tab.active {
+      color: #00D4FF;
+      border-bottom: 2px solid #00D4FF;
+    }
+
+    #dropzone.drag {
+      border-color: var(--accent-indigo);
+      background: rgba(99, 102, 241, 0.08);
+    }
+
+    .up-arrow {
+      animation: upBounce 1.6s ease-in-out infinite;
+    }
+
+    @keyframes upBounce {
+
+      0%,
+      100% {
+        transform: translateY(0)
+      }
+
+      50% {
+        transform: translateY(-8px)
+      }
+    }
+
+    .file-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: .75rem 1rem;
+      border-radius: .6rem;
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      font-size: .875rem;
+      margin-top: .5rem;
+    }
+  </style>
+</head>
+
+<body>
+  <div id="nav-mount"></div>
+
+  <main class="max-w-2xl mx-auto px-6 pt-32 pb-24">
+    <!-- main stepper -->
+    <div class="stepper mb-12">
+      <div class="step done"><span class="step-dot"><i class="fa-solid fa-check text-xs"></i></span><span
+          class="step-label">Type</span></div>
+      <span class="step-line"></span>
+      <div class="step active"><span class="step-dot">2</span><span class="step-label">Record</span></div>
+      <span class="step-line"></span>
+      <div class="step"><span class="step-dot">3</span><span class="step-label">Process</span></div>
+      <span class="step-line"></span>
+      <div class="step"><span class="step-dot">4</span><span class="step-label">Download</span></div>
+    </div>
+
+    <div class="text-center mb-8">
+      <h1 class="section-title mb-2">Capture your voiceprint</h1>
+      <p class="text-secondary" id="current-sample-label">Sample 1 of up to 20 (Min 5 required) · Read any sentence
+        aloud</p>
+    </div>
+
+    <!-- sample progress counter -->
+    <div class="flex flex-col items-center justify-center gap-2 mb-10">
+      <div class="text-xl font-mono text-cyan-400" id="sample-counter">0 / 20 captured</div>
+      <div class="text-xs text-secondary">Minimum 5 samples required for processing</div>
+    </div>
+
+    <!-- tabs -->
+    <div class="flex justify-center gap-8 border-b border-white/[0.06] mb-10">
+      <button class="rec-tab active pb-3 text-sm font-semibold" id="tab-record"
+        onclick="switchTab('record')">Record</button>
+      <button class="rec-tab pb-3 text-sm font-semibold text-secondary" id="tab-upload"
+        onclick="switchTab('upload')">Upload</button>
+    </div>
+
+    <!-- RECORD PANEL -->
+    <div id="panel-record" class="flex flex-col items-center">
+      <div class="relative" style="width:240px;height:240px;">
+        <div id="mic-rings" style="display:none">
+          <span class="pulse-ring"></span>
+          <span class="pulse-ring"></span>
+          <span class="pulse-ring"></span>
+        </div>
+        <div id="mic-circle" class="absolute inset-0 rounded-full grid place-items-center transition-all"
+          style="border:3px solid var(--accent-indigo); background:rgba(99,102,241,0.06); animation:micPulse 3s ease-in-out infinite;">
+          <div id="mic-icon" class="text-5xl text-indigo-300"><i class="fa-solid fa-microphone"></i></div>
+          <div id="rec-dot" style="display:none" class="absolute w-4 h-4 rounded-full bg-red-500 animate-pulse"></div>
+        </div>
+      </div>
+
+      <p class="font-mono text-2xl mt-8" id="timer">00:00 / 00:10</p>
+      <p class="text-secondary text-sm mt-2" id="mic-status">Tap to record 10 seconds</p>
+
+      <div class="mt-6 flex gap-3">
+        <button id="start-btn" class="btn-primary" onclick="startRecording()" style="min-height:48px"><i
+            class="fa-solid fa-microphone"></i> Record</button>
+        <button id="stop-btn" class="btn-ghost" style="display:none" onclick="stopRecording()"><i
+            class="fa-solid fa-stop text-red-400"></i> Stop</button>
+      </div>
+
+      <!-- playback bar -->
+      <div id="playback-bar" class="hidden glass w-full max-w-md p-4 mt-8">
+        <div class="flex items-center gap-3">
+          <button class="w-10 h-10 rounded-full bg-indigo-500 grid place-items-center text-white"
+            onclick="playbackAudio()"><i class="fa-solid fa-play text-xs" id="play-icon"></i></button>
+          <div id="wave-bars" class="flex items-end gap-[2px] flex-1 h-12"></div>
+          <span class="font-mono text-xs text-secondary" id="playback-dur">0:10</span>
+        </div>
+        <div class="flex gap-4 mt-3 text-xs">
+          <button class="nav-link" onclick="reRecord()"><i class="fa-solid fa-rotate-left mr-1"></i>Re-record</button>
+          <button id="next-sample-btn" class="nav-link text-cyan-400 hidden" onclick="nextSample()">Next sample <i
+              class="fa-solid fa-arrow-right ml-1"></i></button>
+        </div>
+      </div>
+    </div>
+
+    <!-- UPLOAD PANEL -->
+    <div id="panel-upload" class="hidden">
+      <div id="dropzone"
+        class="glass border-2 border-dashed border-white/15 rounded-2xl p-12 text-center cursor-pointer transition">
+        <i class="fa-solid fa-cloud-arrow-up up-arrow text-4xl text-indigo-300 mb-4"></i>
+        <p class="font-semibold mb-1">Drop .wav .mp3 .flac .m4a here</p>
+        <p class="text-secondary text-sm mb-3">or click to browse</p>
+        <p class="text-xs text-muted">Min: 3 sec · Max: 60 sec · Max size: 10MB · 5 to 20 files</p>
+        <input type="file" id="file-input" accept=".wav,.mp3,.flac,.ogg,.m4a" multiple class="hidden">
+      </div>
+      <div id="upload-list" class="space-y-2 mt-6"></div>
+    </div>
+
+    <!-- error area -->
+    <div id="process-error" class="mt-4"></div>
+
+    <!-- Process CTA -->
+    <div class="text-center mt-12">
+      <button id="process-btn" class="btn-primary hidden text-base" style="padding:1rem 2rem"
+        onclick="submitToBackend()">
+        Process Voice <i class="fa-solid fa-arrow-right text-sm"></i>
+      </button>
+    </div>
+  </main>
+
+  <script src="js/api.js"></script>
+  <script src="js/main.js"></script>
+  <script src="js/recorder.js"></script>
+  <script>
+    // Guard — must be logged in
+    const __user = Session.requireAuth('auth.html');
+    if (!__user) throw new Error('Not logged in');
+
+    document.getElementById('nav-mount').innerHTML = renderNavbar();
+    setupDropzone();
+
+    function switchTab(tab) {
+      ['tab-record', 'tab-upload'].forEach(id => {
+        const btn = document.getElementById(id);
+        if (id === 'tab-' + tab) { btn.classList.add('active'); btn.classList.remove('text-secondary'); }
+        else { btn.classList.remove('active'); btn.classList.add('text-secondary'); }
+      });
+      document.getElementById('panel-record').classList.toggle('hidden', tab !== 'record');
+      document.getElementById('panel-upload').classList.toggle('hidden', tab !== 'upload');
+    }
+
+    // ── Submit audio blobs to backend ─────────────────────────────────────────
+    async function submitToBackend() {
+      const btn = document.getElementById('process-btn');
+      const errDiv = document.getElementById('process-error');
+      errDiv.innerHTML = '';
+
+      const blobs = Session.getFiles();
+      if (!blobs || blobs.length === 0) {
+        errDiv.textContent = 'No audio samples captured. Please record or upload first.';
+        errDiv.style.cssText = 'color:#FCA5A5;font-size:.875rem;text-align:center;margin-top:.5rem;';
+        return;
+      }
+
+      setLoading(btn, true);
+      try {
+        const data = await apiProcess(__user.email, blobs);
+        if (data.message) {
+          sessionStorage.setItem('process_message', data.message);
+        }
+        // success — navigate to processing page (it will poll status)
+        window.location.href = 'onboarding-processing.html';
+      } catch (err) {
+        errDiv.textContent = '⚠ ' + err.message;
+        errDiv.style.cssText = `
+          padding:.75rem 1rem; border-radius:.6rem; text-align:center;
+          background:rgba(239,68,68,0.12); border:1px solid rgba(239,68,68,0.35);
+          color:#FCA5A5; font-size:.875rem;`;
+        setLoading(btn, false);
+      }
+    }
+
+    // Playback helper
+    let __audioBlob = null;
+    let __audioEl = null;
+
+    function playbackAudio() {
+      const blobs = Session.getFiles();
+      if (!blobs || !blobs[RecorderState.current]) return;
+      if (__audioEl) { __audioEl.pause(); __audioEl = null; }
+      const url = URL.createObjectURL(blobs[RecorderState.current].blob);
+      __audioEl = new Audio(url);
+      __audioEl.play();
+      document.getElementById('play-icon').className = 'fa-solid fa-pause text-xs';
+      __audioEl.onended = () => {
+        document.getElementById('play-icon').className = 'fa-solid fa-play text-xs';
+      };
+    }
+  </script>
+  <style>
+    @keyframes micPulse {
+
+      0%,
+      100% {
+        transform: scale(1)
+      }
+
+      50% {
+        transform: scale(1.03)
+      }
+    }
+  </style>
+</body>
+
+</html>

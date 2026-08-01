@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Choose Account Type · Audio Classification Hub</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link
+    href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700;800&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
+    rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+
+<body>
+  <div id="nav-mount"></div>
+
+  <main class="max-w-5xl mx-auto px-6 pt-32 pb-24">
+    <!-- stepper -->
+    <div class="stepper mb-16">
+      <div class="step active"><span class="step-dot">1</span><span class="step-label">Type</span></div>
+      <span class="step-line"></span>
+      <div class="step"><span class="step-dot">2</span><span class="step-label">Record</span></div>
+      <span class="step-line"></span>
+      <div class="step"><span class="step-dot">3</span><span class="step-label">Process</span></div>
+      <span class="step-line"></span>
+      <div class="step"><span class="step-dot">4</span><span class="step-label">Download</span></div>
+    </div>
+
+    <div class="text-center mb-12">
+      <h1 class="section-title mb-3">How will you use Audio Hub?</h1>
+      <p class="text-secondary">Pick the path that fits you. You can change this later.</p>
+    </div>
+
+    <div class="grid md:grid-cols-2 gap-6 max-w-3xl mx-auto">
+      <article class="glass select-card p-8 text-center" data-type="individual" onclick="selectCard(this)">
+        <div class="select-check"><i class="fa-solid fa-check text-sm"></i></div>
+        <div class="relative w-24 h-24 mx-auto mb-6">
+          <span class="absolute inset-0 rounded-full border border-cyan-400/30 animate-ping"></span>
+          <span class="absolute inset-2 rounded-full border border-cyan-400/20"></span>
+          <div class="w-24 h-24 rounded-full grid place-items-center bg-cyan-400/10 border border-cyan-400/30">
+            <i class="fa-solid fa-user text-cyan-400 text-3xl"></i>
+          </div>
+        </div>
+        <h3 class="text-xl font-bold mb-2">Individual</h3>
+        <p class="text-secondary text-sm mb-1">Single voice profile</p>
+        <p class="text-secondary text-sm mb-1">Personal authentication</p>
+        <p class="text-cyan-400 text-sm font-medium">Free to start</p>
+      </article>
+
+      <article class="glass select-card p-8 text-center" data-type="company" onclick="selectCard(this)">
+        <div class="select-check"><i class="fa-solid fa-check text-sm"></i></div>
+        <div class="relative w-24 h-24 mx-auto mb-6">
+          <div class="w-24 h-24 rounded-full grid place-items-center bg-indigo-500/10 border border-indigo-400/30">
+            <i class="fa-solid fa-building text-indigo-300 text-3xl"></i>
+          </div>
+          <span class="absolute top-1 right-2 w-2 h-2 rounded-full bg-magenta-400" style="background:#EC4899"></span>
+          <span class="absolute bottom-3 left-1 w-2 h-2 rounded-full bg-purple-400"></span>
+        </div>
+        <h3 class="text-xl font-bold mb-2">Team / Company</h3>
+        <p class="text-secondary text-sm mb-1">Multiple users, bulk upload</p>
+        <p class="text-secondary text-sm mb-1">Webhook support</p>
+        <p class="text-indigo-300 text-sm font-medium">Multi-user ready</p>
+      </article>
+    </div>
+
+    <div id="continue-wrap"
+      class="text-center mt-10 opacity-0 translate-y-4 transition-all duration-300 pointer-events-none">
+      <a id="continue-btn" href="#" class="btn-primary">Continue <i class="fa-solid fa-arrow-right text-sm"></i></a>
+    </div>
+  </main>
+
+  <script src="js/api.js"></script>
+  <script src="js/main.js"></script>
+  <script>
+    // Auth guard — must be logged in to choose a type
+    const __typeUser = Session.requireAuth('auth.html');
+    if (!__typeUser) throw new Error('Not logged in');
+
+    document.getElementById('nav-mount').innerHTML = renderNavbar();
+    let selected = null;
+
+    function selectCard(card) {
+      document.querySelectorAll('.select-card').forEach(c => c.classList.remove('selected'));
+      card.classList.add('selected');
+      const check = card.querySelector('.select-check');
+      check.classList.add('bounce-in');
+      setTimeout(() => check.classList.remove('bounce-in'), 500);
+      selected = card.dataset.type;
+
+      // Persist choice
+      try { sessionStorage.setItem('ach_account_type', selected); } catch (e) { }
+
+      // Route based on type
+      const wrap = document.getElementById('continue-wrap');
+      const btn = document.getElementById('continue-btn');
+      if (selected === 'company') {
+        btn.href = 'onboarding-company.html';
+      } else {
+        btn.href = 'onboarding-record.html';
+      }
+      wrap.classList.remove('opacity-0', 'translate-y-4', 'pointer-events-none');
+    }
+  </script>
+</body>
+
+</html>

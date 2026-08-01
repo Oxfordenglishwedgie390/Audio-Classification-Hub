@@ -1,0 +1,28 @@
+# Python
+__pycache__/
+*.pyc
+
+# Virtual Environment
+venv/
+
+# Environment Variables
+.env
+
+# Workspace
+workspaces/
+
+# Database
+DataBase/
+
+# Optional
+pretrained_models/
+
+# Jupyter
+.ipynb_checkpoints/
+
+# VS Code
+.vscode/
+
+# OS Files
+.DS_Store
+Thumbs.db
